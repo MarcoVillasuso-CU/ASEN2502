@@ -31,7 +31,6 @@ fileLoc = '15 mps Data Files/';
 list = dir([fileLoc, '*AoA*']); % This lists all files in fileLoc with 'WTData' in the file name
 numFiles1 = length(list);
 for i = 1:numFiles1
-    global fileNames15;
     fileNames15{i} = [fileLoc, list(i).name]; % This makes a string of the complete file name with the path in front of it
     
     AoA15(i) = str2num(char(extractBetween(list(i).name, 'AoA_', '.csv'))); % Finds the angle of attack value in the name and make it a usable number
@@ -76,26 +75,27 @@ for j = 1:numFiles1
     Data15(j,4) = mean(RawData15(:,1)); %Sets mean of temperature (atmosphere) as 4th column
     Data15(j,5) = mean(RawData15(:,3)); %Sets mean of calculaed density (atmosphere) as 5th column
     Data15(j,6) = mean(RawData15(:,5)); %Sets mean of test section dynamic pressure as 6th column
-    %Data15(j,7) = ; %Calculates test section static pressure by calculating Po - q
+    Data15(j,7) = Data15(j,3)- Data15(j,6); %Calculates test section static pressure by calculating Po - q
     %Calculate airfoil port static pressures from measured differential
     %pressues (P_port - P_static_test) & sets columns 8 - 24 as airfoil static port pressure values (calculated) 
-    Data15(j,8) = mean(RawData15(:,15));
-    Data15(j,9) = mean(RawData15(:,16)); %Airfoil scanivalve port 2
-    Data15(j,10) = mean(RawData15(:,17)); %Airfoil scanivalve port 3
-    Data15(j,11) = mean(RawData15(:,18)); %Airfoil scanivalve port 4
-    Data15(j,12) = mean(RawData15(:,19)); %Airfoil scanivalve port 5
-    Data15(j,13) = mean(RawData15(:,20)); %Airfoil scanivalve port 6
-    Data15(j,14) = mean(RawData15(:,21)); %Airfoil scanivalve port 7
-    Data15(j,15) = mean(RawData15(:,22)); %Airfoil scanivalve port 8
-    Data15(j,16) = mean(RawData15(:,23)); %Airfoil scanivalve port 9
-    Data15(j,17) = 0; %TE - Assume Airfoil trailing edge pressure = test section static pressure
-    Data15(j,18) = mean(RawData15(:,25)); %Airfoil scanivalve port 10
-    Data15(j,19) = mean(RawData15(:,26)); %Airfoil scanivalve port 11
-    Data15(j,20) = mean(RawData15(:,27)); %Airfoil scanivalve port 12
-    Data15(j,21) = mean(RawData15(:,28)); %Airfoil scanivalve port 13
-    Data15(j,22) = mean(RawData15(:,29)); %Airfoil scanivalve port 14
-    Data15(j,23) = mean(RawData15(:,30)); %Airfoil scanivalve port 15
-    Data15(j,24) = Data15(j,8); %Repeats port 1 (leading edge)
+    Data15(j,8) = mean(RawData15(:,15))+ Data15(j,7);
+    Data15(j,9) = mean(RawData15(:,16))+ Data15(j,7); %Airfoil scanivalve port 2
+    Data15(j,10) = mean(RawData15(:,17))+ Data15(j,7); %Airfoil scanivalve port 3
+    Data15(j,11) = mean(RawData15(:,18))+ Data15(j,7); %Airfoil scanivalve port 4
+    Data15(j,12) = mean(RawData15(:,19))+ Data15(j,7); %Airfoil scanivalve port 5
+    Data15(j,13) = mean(RawData15(:,20))+ Data15(j,7); %Airfoil scanivalve port 6
+    Data15(j,14) = mean(RawData15(:,21))+ Data15(j,7); %Airfoil scanivalve port 7
+    Data15(j,15) = mean(RawData15(:,22))+ Data15(j,7); %Airfoil scanivalve port 8
+    Data15(j,16) = mean(RawData15(:,23))+ Data15(j,7); %Airfoil scanivalve port 9
+    Data15(j,17) = Data15(j,7); %TE - Assume Airfoil trailing edge pressure = test section static pressure
+    Data15(j,18) = mean(RawData15(:,24))+ Data15(j,7); %Airfoil scanivalve port 10
+    Data15(j,19) = mean(RawData15(:,25))+ Data15(j,7); %Airfoil scanivalve port 11
+    Data15(j,20) = mean(RawData15(:,26))+ Data15(j,7); %Airfoil scanivalve port 12
+    Data15(j,21) = mean(RawData15(:,27))+ Data15(j,7); %Airfoil scanivalve port 13
+    Data15(j,22) = mean(RawData15(:,28))+ Data15(j,7); %Airfoil scanivalve port 14
+    Data15(j,23) = mean(RawData15(:,29))+ Data15(j,7); %Airfoil scanivalve port 15
+    Data15(j,24) = mean(RawData15(:,30))+ Data15(j,7);
+    Data15(j,25) = Data15(j,8); %Repeats port 1 (leading edge)
 
 end
 Data15 = sortrows(Data15,1); %Sorts data by increasing AoA
@@ -139,28 +139,57 @@ Data15 = sortrows(Data15,1); %Sorts data by increasing AoA
 
 
 % Normal and Axial Force components Velocity & AoA tested (done by student code)
+NU15 = zeros(1,30);%norml upper
+NL15 = zeros(1,30);%noraml lower
+AU15 = zeros(1,30);%axial upper
+AL15 = zeros(1,30);%axial lower
+PDiff = zeros(2,17);%pressure differiential
+Ntot = zeros(1,30);% normal total
+Atot = zeros(1,30);%axial total
+
+ for j = 1:30
+     Segments(8-7,2);
+     for k = 8:16
+         PDiff(1,k-7) = (Data15(j,k)+Data15(j,k+1))/2;
+         NU15(1,j) = NU15(1,j) - (Data15(j,k)+Data15(j,k+1))/2 * Segments{k-7,2};
+         AU15(1,j) = AU15(1,j) + (Data15(j,k)+Data15(j,k+1))/2 * Segments{k-7,3};
+       
+     end
+     for k = 17:24
+         PDiff(1,k-7) = (Data15(j,k)+Data15(j,k+1))/2;
+         NL15(1,j) = NL15(1,j) + (Data15(j,k)+Data15(j,k+1))/2 * Segments{k-7,2};
+         AL15(1,j) = AL15(1,j) - (Data15(j,k)+Data15(j,k+1))/2 * Segments{k-7,3};
+     
+     end
+   
+     Ntot(1,j) = NU15(1,j) + NL15(1,j);%Normal total
+     Atot(1,j) = AU15(1,j) + AL15(1,j);%Axial total
+ end
+
+ LF = zeros(1,30);% lift force
+ qinf = zeros(1,30);% dynamic pressure
+ c = 0.0889;%cord length
+ Cl = zeros(1,30);%coefficent of lift
+
+ for i = 1:30 % calculates lift force, qinf, and coefficent of life for all AoA
+
+    LF(i,1) =( Ntot(1,i) *  cosd(Data15(i,1))) - (Atot(1,i) * sind(Data15(i,1)));
+    qinf(i,1) = Data15(i,5) * (Data15(i,2)^2)/2;
+    Cl(i,1) = LF(i,1) / (qinf(i,1)*c);
+
+ end
+
+ 
+
+ plot(Data15(:,1),Cl(:,1))%coefficent of lift vs AoA
+
+
+
+    
+
 % Lift & Coefficient of Lift Velocity & AoA tested (done by student code)
 
 %% Plots
 % Velocity vs normalized chord (x/c)
 % Coefficient of Pressure vs normalized chord (x/c)
 % Coefficient of Lift vs Angle of Attack
-Data15
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
