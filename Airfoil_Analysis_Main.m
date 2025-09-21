@@ -1,6 +1,3 @@
-
-
-
 %%ASEN 2502 Wind Tunnel Lab
 % Author:
 % Lab Description: Employ basic experimental wind tunnel testing procedures, 
@@ -21,10 +18,6 @@
 %% Intialize Workspace
 clear; clc; close all; % Clear workspace, command window, and close all figures
 
-% Change to 30 to get 30m/s data
-global AirSpeed;
-AirSpeed = 15;
-
 addpath(genpath('15 mps Data Files')); %Adds 15 m/s test data files folder and subfolders
 addpath(genpath('30 mps Data Files')); %Adds 30 m/s test data files folder and subfolders
 
@@ -36,24 +29,28 @@ Segments = readtable('Port_Locations.xlsx','Sheet','Segments'); %Read in segment
 % Get filenames for test data files
 fileLoc = '15 mps Data Files/';
 list = dir([fileLoc, '*AoA*']); % This lists all files in fileLoc with 'WTData' in the file name
-numFiles1 = length(list);
-for i = 1:numFiles1
+numFiles = length(list);
+
+for i = 1:numFiles
     fileNames15{i} = [fileLoc, list(i).name]; % This makes a string of the complete file name with the path in front of it
-    
     AoA15(i) = str2num(char(extractBetween(list(i).name, 'AoA_', '.csv'))); % Finds the angle of attack value in the name and make it a usable number
 end
 fileNames15 = string(fileNames15); % Convert to char array from cell array
 AoA_Count15 = length(AoA15); %Counts number of AoAs tested
 
-fileLoc = '30 mps Data Files';
+%% Search Data Files 30
+%{
+fileLoc = '30 mps Data Files/';
 list = dir([fileLoc, '*AoA*']); % This lists all files in fileLoc with 'WTData' in the file name
 numFiles = length(list);
+
 for i = 1:numFiles
     fileNames30{i} = [fileLoc, list(i).name]; % This makes a string of the complete file name with the path in front of it
     AoA30(i) = str2num(char(extractBetween(list(i).name, 'AoA_', '.csv'))); % Finds the angle of attack value in the name and make it a usable number
 end
-%fileNames30 = string(fileNames30); % Convert to char array from cell array
-%AoA_Count30 = length(AoA30); %Counts number of AoAs tested
+fileNames30 = string(fileNames30); % Convert to char array from cell array
+AoA_Count30 = length(AoA30); %Counts number of AoAs tested
+%}
 
 %% Ingest Data Files and Data Conditioning
 % Averaging Raw Data Samples for each Velocity & AOA Tested
@@ -63,17 +60,17 @@ end
     % Average Airfoil Port Local Static Pressure (done by student code)
 
 % Initialize Storage Arrays
-Data15 = zeros(numFiles1,25); %Conditioned wind tunnel data file 15 m/s
+Data15 = zeros(numFiles,25); %Conditioned wind tunnel data file 15 m/s
 Data30 = zeros(numFiles,25); %Conditioned wind tunnel data file 30 m/s
 
-%% Ingest and Condition Data
+%% Ingest and Condition Data 15
 % Averaging Raw Data Samples for each Velocity & AOA Tested
 % Derived Values for each Velocity & AoA tested
     % Average Test Section Static Pressure (done by student code)
     % Average Airfoil Port Local Velocity (done by student code)
     % Average Airfoil Port Local Static Pressure (done by student code)
 
-for j = 1:numFiles1
+for j = 1:numFiles
     RawData15 = readmatrix(fileNames15(j),'NumHeaderLines',1); % load the data
     %Condition data
     Data15(j,1) = AoA15(j); %Sets AoA (deg) as 1st column
@@ -82,10 +79,10 @@ for j = 1:numFiles1
     Data15(j,4) = mean(RawData15(:,1)); %Sets mean of temperature (atmosphere) as 4th column
     Data15(j,5) = mean(RawData15(:,3)); %Sets mean of calculaed density (atmosphere) as 5th column
     Data15(j,6) = mean(RawData15(:,5)); %Sets mean of test section dynamic pressure as 6th column
-    Data15(j,7) = Data15(j,3)- Data15(j,6); %Calculates test section static pressure by calculating Po - q
+    Data15(j,7) = Data15(j,3)-Data15(j,6); %Calculates test section static pressure by calculating Po - q
     %Calculate airfoil port static pressures from measured differential
     %pressues (P_port - P_static_test) & sets columns 8 - 24 as airfoil static port pressure values (calculated) 
-    Data15(j,8) = mean(RawData15(:,15));
+    Data15(j,8) = mean(RawData15(:,15)); %Airfoil scanivalve port 1
     Data15(j,9) = mean(RawData15(:,16)); %Airfoil scanivalve port 2
     Data15(j,10) = mean(RawData15(:,17)); %Airfoil scanivalve port 3
     Data15(j,11) = mean(RawData15(:,18)); %Airfoil scanivalve port 4
@@ -94,131 +91,174 @@ for j = 1:numFiles1
     Data15(j,14) = mean(RawData15(:,21)); %Airfoil scanivalve port 7
     Data15(j,15) = mean(RawData15(:,22)); %Airfoil scanivalve port 8
     Data15(j,16) = mean(RawData15(:,23)); %Airfoil scanivalve port 9
-    Data15(j,17) = Data15(j,7) - Data15(j,7); %TE - Assume Airfoil trailing edge pressure = test section static pressure
+    Data15(j,17) = 0; %TE - Assume Airfoil trailing edge pressure = test section static pressure
     Data15(j,18) = mean(RawData15(:,24)); %Airfoil scanivalve port 10
     Data15(j,19) = mean(RawData15(:,25)); %Airfoil scanivalve port 11
     Data15(j,20) = mean(RawData15(:,26)); %Airfoil scanivalve port 12
     Data15(j,21) = mean(RawData15(:,27)); %Airfoil scanivalve port 13
     Data15(j,22) = mean(RawData15(:,28)); %Airfoil scanivalve port 14
     Data15(j,23) = mean(RawData15(:,29)); %Airfoil scanivalve port 15
-    Data15(j,24) = mean(RawData15(:,30));
+    Data15(j,24) = mean(RawData15(:,30)); %Airfoil scanivalve port 16
     Data15(j,25) = Data15(j,8); %Repeats port 1 (leading edge)
-
-    % Add static pressure to each port's dynamic pressure to get the total
-    % pressure
-    for k=8:25
-        Data15(j,k) = Data15(j,k) + Data15(j,7);
-    end
 
 end
 Data15 = sortrows(Data15,1); %Sorts data by increasing AoA
 
-% for j = 1:numFiles
-%     RawData30 = readmatrix(fileNames30(j),'NumHeaderLines',1); % load the data
-%     %Condition data
-%     Data30(j,1) = AoA30(j); %Sets AoA (deg) as 1st column
-%     Data30(j,2) = ; %Sets mean of velocity measurements as 2nd column
-%     Data30(j,3) = ; %Sets mean of total pressure (atmosphere) as 3rd column
-%     Data30(j,4) = ; %Sets mean of temperature (atmosphere) as 4th column
-%     Data30(j,5) = ; %Sets mean of calculaed density (atmosphere) as 5th column
-%     Data30(j,6) = ; %Sets mean of test section dynamic pressure as 6th column
-%     Data30(j,7) = ; %Calculates test section static pressure by calculating Po - q
-%     %Calculate airfoil port static pressures from measured differential
-%     %pressues (P_port - P_static_test) & sets columns 8 - 24 as airfoil static port pressure values calculated 
-%     Data30(j,8) = ; %Airfoil scanivalve port 1
-%     Data30(j,9) = ; %Airfoil scanivalve port 2
-%     Data30(j,10) = ; %Airfoil scanivalve port 3
-%     Data30(j,11) = ; %Airfoil scanivalve port 4
-%     Data30(j,12) = ; %Airfoil scanivalve port 5
-%     Data30(j,13) = ; %Airfoil scanivalve port 6
-%     Data30(j,14) = ; %Airfoil scanivalve port 7
-%     Data30(j,15) = ; %Airfoil scanivalve port 8
-%     Data30(j,16) = ; %Airfoil scanivalve port 9
-%     Data30(j,17) = ; %TE  - Assume Airfoil trailing edge pressure = test section static pressure
-%     Data30(j,18) = ; %Airfoil scanivalve port 10
-%     Data30(j,19) = ; %Airfoil scanivalve port 11
-%     Data30(j,20) = ; %Airfoil scanivalve port 12
-%     Data30(j,21) = ; %Airfoil scanivalve port 13
-%     Data30(j,22) = ; %Airfoil scanivalve port 14
-%     Data30(j,23) = ; %Airfoil scanivalve port 15
-%     Data30(j,24) = ; %Airfoil scanivalve port 16
-%     Data30(j,25) = ; %Repeats port 1 (leading edge)
-% 
-% end
-% Data30 = sortrows(Data30,1); %Sorts data by increasing AoA
+%% Raw Data Collection(30) Implement Later
+%{
+for j = 1:numFiles
+    RawData30 = readmatrix(fileNames30(j),'NumHeaderLines',1); % load the data
+    %Condition data
+    Data30(j,1) = AoA30(j); %Sets AoA (deg) as 1st column
+    Data30(j,2) = ; %Sets mean of velocity measurements as 2nd column
+    Data30(j,3) = ; %Sets mean of total pressure (atmosphere) as 3rd column
+    Data30(j,4) = ; %Sets mean of temperature (atmosphere) as 4th column
+    Data30(j,5) = ; %Sets mean of calculaed density (atmosphere) as 5th column
+    Data30(j,6) = ; %Sets mean of test section dynamic pressure as 6th column
+    Data30(j,7) = ; %Calculates test section static pressure by calculating Po - q
+    %Calculate airfoil port static pressures from measured differential
+    %pressues (P_port - P_static_test) & sets columns 8 - 24 as airfoil static port pressure values calculated 
+    Data30(j,8) = ; %Airfoil scanivalve port 1
+    Data30(j,9) = ; %Airfoil scanivalve port 2
+    Data30(j,10) = ; %Airfoil scanivalve port 3
+    Data30(j,11) = ; %Airfoil scanivalve port 4
+    Data30(j,12) = ; %Airfoil scanivalve port 5
+    Data30(j,13) = ; %Airfoil scanivalve port 6
+    Data30(j,14) = ; %Airfoil scanivalve port 7
+    Data30(j,15) = ; %Airfoil scanivalve port 8
+    Data30(j,16) = ; %Airfoil scanivalve port 9
+    Data30(j,17) = ; %TE  - Assume Airfoil trailing edge pressure = test section static pressure
+    Data30(j,18) = ; %Airfoil scanivalve port 10
+    Data30(j,19) = ; %Airfoil scanivalve port 11
+    Data30(j,20) = ; %Airfoil scanivalve port 12
+    Data30(j,21) = ; %Airfoil scanivalve port 13
+    Data30(j,22) = ; %Airfoil scanivalve port 14
+    Data30(j,23) = ; %Airfoil scanivalve port 15
+    Data30(j,24) = ; %Airfoil scanivalve port 16
+    Data30(j,25) = ; %Repeats port 1 (leading edge)
+
+end
+Data30 = sortrows(Data30,1); %Sorts data by increasing AoA
+%}
 
 %% Determine Forces & Analyze Results
 % Pressure Distribution for each Velocity & AoA tested (done by student code)
-
-
-% Normal and Axial Force components Velocity & AoA tested (done by student code)
-NormalUpper = zeros(1,30);
-NormalLower = zeros(1,30);
-AxialUpper = zeros(1,30);
-AxialLower = zeros(1,30);
-PDiff = zeros(2,17);%pressure differiential
-Ntot = zeros(1,30);% normal total
-Atot = zeros(1,30);%axial total
-
-AirfoilData = Data15;
-
-if (AirSpeed == 30)
-    AirfoilData = Data30;
+PdisU = zeros(numFiles,9); %Creates Empty Array for Upper Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
+PdisL = zeros(numFiles,8); %Creates Empty Array for Lower Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
+for j = 1:numFiles %Iterates Through Each Angle of Attack
+    for i = 1:17 %Iterates Through Each Port
+        if i < 10 %Determines Upper or Lower
+            PdisU(j,i) = (Data15(j,7)-Data15(j,i+7)+Data15(j,7)-Data15(j,i+8))/2 * Segments{i,2}; %Calculates Upper Pressure Distribution Per Port
+        else
+            PdisL(j,i-9) = (Data15(j,7)-Data15(j,i+7)+Data15(j,7)-Data15(j,i+8))/2 * Segments{i,2}; %Calculates Lower Pressure Distribtuion Per Port
+        end
+    end
+end
+%Coefficient of Pressure
+C_pressureU = zeros(numFiles,9); %Creates Empty Array for Coefficient of Upper Pressures
+C_pressureL = zeros(numFiles,8); %Creates Empty Array for Coefficient of Lower Pressures
+for j = 1:numFiles %Iterates Through AoAs
+    for i = 1:18
+        if i < 10
+            C_pressureU(j,i) = Data15(j,i+7)/Data15(j,6); %Calculates Upper CoP
+        elseif i == 10
+            C_pressureU(j,i) = Data15(j,i+7)/Data15(j,6); %Calculates TE CoP
+            C_pressureL(j,i-9) = Data15(j,i+7)/Data15(j,6); %Calculates TE CoP
+        else
+            C_pressureL(j,i-9) = Data15(j,i+7)/Data15(j,6); %Calculates Lower CoP
+        end
+    end
 end
 
-    %% Iterate over all AOAs (-15 -> 15)
- for j = 1:30
+% Normal and Axial Force components for each Velocity & AoA tested (done by student code)
+N_upper = zeros(numFiles,1); %Creates Empty Array for Upper Normal Force
+N_lower = zeros(numFiles,1); %Creates Empty Array for Lower Normal Force
+A_upper = zeros(numFiles,1); %Creates Empty Array for Upper Axial Force
+A_lower = zeros(numFiles,1); %Creates Empty Array for Lower Axial Force
+for j = 1:numFiles %Iterates Through Each Angle of Attack
+    for i = 1:17 %Iterates Through Each Port Section
+        if i<10 %Determines Upper or Lower
+            N_upper(j) = N_upper(j) - PdisU(j,i); %Subtracts Segmented Normal Upper Force From Total
+            A_upper(j) = A_upper(j) + (Data15(j,i+7)+Data15(j,i+8))/2 * Segments {i,3}; %Calculates and Adds Segmented Axial Upper Force to Total
+        else
+            N_lower(j) = N_lower(j) + PdisL(j,i-9); %Adds Segmented Normal Lower Force to Total
+            A_lower(j) = A_lower(j) - (Data15(j,i+7)+Data15(j,i+8))/2 * Segments {i,3}; %Calculates and Subtractes Segmented Axial Lower Force From Total
+        end
+    end
+end
+N_total = N_upper + N_lower; %Calculates Total Normal Force
+A_total = A_upper + A_lower; %Calculates Total Axial Force
 
-     % Process data for the top of the airfoil (1 -> TE)
-     for k = 8:16
-         ThisPortPressure = AirfoilData(j,k);
-         NextPortPressure = AirfoilData(j,k+1);
-         dX = Segments{k-7,2};
-         dY = Segments{k-7,3};
-         dP = (ThisPortPressure  +  NextPortPressure)/2; % Take average of pressures between this port and the next
-         
-         PDiff(1,k-7) = dP;
-         NormalUpper(1,j) = NormalUpper(1,j) - dP * dX;
-         AxialUpper(1,j) = AxialUpper(1,j) + dP * dY;
-       
-     end
+% Lift & Coefficient of Lift for each Velocity & AoA tested (done by student code)
+Chord_length = Ports{10,2}; %Sets Chord Length Equal to X Value of Trailing Edge Port
+for j = 1:numFiles %Iterates Through Each AoA
+    Lift = N_total * cos(Data15(j,1)) - A_total * sin(Data15(j,2)); %Calculates Lift and Puts into new Array
+    C_lift = Lift/(Data15(j,6) * Chord_length); %Calculates Coeficient of Lift
+end
 
+%Normalized Chord
+Chord_NormalU = zeros(1,9); %Creates Empty Array for Upper Normalized Chord Lengths (% of Chord)
+Chord_NormalL = zeros(1,8); %Creates Empty Array for Lower Normalized Chord Lengths (% of Chord)
+for i = 1:18 %Iterates Through Each Port
+    if i < 10 %Determines Upper or Lower
+        Chord_NormalU(i) = Ports{i,2}/Ports{10,2}; %Calculates Upper Normalized Chord Lengths
+    elseif i == 10
+        Chord_NormalU(i) = Ports{i,2}/Ports{10,2}; %Calculates TE Normalized Chord Lengths
+        Chord_NormalL(i-9) = Ports{i,2}/Ports{10,2}; %Claculates TE Normalized Chord Lengths
+    else
+        Chord_NormalL(i-9) = Ports{i,2}/Ports{10,2}; %Claculates Lower Normalized Chord Lengths
+    end
+end
 
-     for k = 17:24
-         PDiff(1,k-7) = (AirfoilData(j,k)+AirfoilData(j,k+1))/2;
-         NormalLower(1,j) = NormalLower(1,j) + (AirfoilData(j,k)+AirfoilData(j,k+1))/2 * Segments{k-7,2};
-         AxialLower(1,j) = AxialLower(1,j) - (AirfoilData(j,k)+AirfoilData(j,k+1))/2 * Segments{k-7,3};
-     
-     end
-   
-     Ntot(1,j) = NormalUpper(1,j) + NormalLower(1,j);%Normal total
-     Atot(1,j) = AxialUpper(1,j) + AxialLower(1,j);%Axial total
- end
-
- LF = zeros(1,30);% lift force
- qinf = zeros(1,30);% dynamic pressure
- c = 0.0889;%cord length
- Cl = zeros(1,30);%coefficent of lift
-
- for i = 1:30 % calculates lift force, qinf, and coefficent of life for all AoA
-
-    LF(i,1) =( Ntot(1,i) *  cosd(Data15(i,1))) - (Atot(1,i) * sind(Data15(i,1)));
-    qinf(i,1) = Data15(i,5) * (Data15(i,2)^2)/2;
-    Cl(i,1) = LF(i,1) / (qinf(i,1)*c);
-
- end
-
- 
-
- plot(Data15(:,1),Cl(:,1))%coefficent of lift vs AoA
-
-
-
-    
-
-% Lift & Coefficient of Lift Velocity & AoA tested (done by student code)
+%Velocity Calculations
+VelocityU = zeros(numFiles,9); %Creates Empty Array for Velocities of Upper Ports
+VelocityL = zeros(numFiles,8); %Creates Empty Array for Velocities of Lower Ports
+for j = 1:numFiles %Iterates Through AoAs
+    for i = 1:18 %Iterates Through Ports
+        if i < 10
+            VelocityU(j,i) = sqrt(2*abs(Data15(j,i+7)/Data15(j,5))); %Calculates Upper Velocities
+        elseif i == 10
+            VelocityU(j,i) = sqrt(2*abs(Data15(j,i+7)/Data15(j,5))); %Calculates TE Velocity
+            VelocityL(j,i-9) = sqrt(2*abs(Data15(j,i+7)/Data15(j,5))); %Calculates TE Velocity
+        else
+            VelocityL(j,i-9) = sqrt(2*abs(Data15(j,i+7)/Data15(j,5))); %Calculates Lower Velocites
+        end
+    end
+end
 
 %% Plots
 % Velocity vs normalized chord (x/c)
+figure1 = figure("Name","1");
+VU = plot(Chord_NormalU(:),VelocityU(6,1:10));
+hold on;
+VL = plot(Chord_NormalL(:),VelocityL(6,1:9));
+hold off;
+xlabel("Normalized Chord Length");
+ylabel("Local Velocity (m/s)");
+title("Local Velocity vs Chord Length");
+legend([VU,VL], {"Upper","Lower"});
 % Coefficient of Pressure vs normalized chord (x/c)
+figure2 = figure("Name","2");
+PU = plot(Chord_NormalU(:),C_pressureU(6,1:10),'-');
+hold on;
+PL = plot(Chord_NormalL(:),C_pressureL(6,1:9),'-');
+set(gca, 'YDir', 'reverse')
+hold off;
+xlabel("Normalized Chord Length");
+ylabel("Coefficient of Pressure");
+title("Coefficient of Pressure vs Chord Length");
+legend([PU,PL], {"Upper","Lower"});
 % Coefficient of Lift vs Angle of Attack
+figure3 = figure("name","3");
+plot(Data15(:,1),C_lift); %Plots CoL against AoA
+    xlabel("Angle of Attack"); %Set Labels for Graph
+    ylabel("Coefficient of Lift");
+    title("Angle of Attack vs Coefficient of Lift");
+
+
+
+
+
+
+
+
