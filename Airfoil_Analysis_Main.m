@@ -244,7 +244,9 @@ for j = 1:numFiles %Iterates Through AoAs
     end
 end
 
-
+%% Clark NACA Overlay Collection
+NACA = readtable("ClarkY14_NACA_TR628.xlsx");
+NACA = table2array(NACA);
 
 %% Plots
 % Velocity vs normalized chord (x/c)
@@ -343,11 +345,19 @@ sgtitle("Local Coefficient of Pressure of " + Speed_String + " Airfoil at Varyin
 
 % Coefficient of Lift vs Angle of Attack
 figure3 = figure("name","C Lift");
-plot(Data(:,1),C_lift); %Plots CoL against AoA
+EL = plot(Data(:,1),C_lift); %Plots CoL against AoA
+hold on;
+NL = plot(NACA(:,1),NACA(:,2));
+hold off;
     grid on;
     xlabel("Angle of Attack"); %Set Labels for Graph
     ylabel("Coefficient of Lift");
-    title("Coefficient of Lift of " + Speed_String + " Airfoil Relative to Angle of Attack");
+    title("Coefficient of Lift of " + Speed_String + " Airfoil and NACA Clark Y-14 Airfoil");
+    legend([EL,NL], {"15 m/s Airfoil","NACA Clark Y-14"});
+   
+
+
+
 
 
 
