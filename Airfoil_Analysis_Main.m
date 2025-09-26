@@ -15,11 +15,15 @@
 % Outputs:
 % 
 %
+
 %% Intialize Workspace
 clear; clc; close all; % Clear workspace, command window, and close all figures
 
 addpath(genpath('15 mps Data Files')); %Adds 15 m/s test data files folder and subfolders
 addpath(genpath('30 mps Data Files')); %Adds 30 m/s test data files folder and subfolders
+
+%% Velocity Choice
+Velocity_Choice = 15; %(15 or 30)
 
 %% Import Airfoil Port Locations
 Ports = readtable('Port_Locations.xlsx','Sheet','Port_Locations'); %Read in CSV file with port locations
@@ -140,16 +144,20 @@ for j = 1:numFiles
 end
 Data30 = sortrows(Data30,1); %Sorts data by increasing AoA
 
-%% DATA CHOICE
-Data = Data30; %Type Data15 or Data30
-if Data == Data15 %Sets Index Values for Required AoA for 15 mps
+%% DATA Selected
+Speed_String = "";
+if Velocity_Choice == 15 %Sets Index Values for Required AoA for 15 mps
+    Data = Data15;
     FullStall_AoA = 25;
     MaxLift_AoA = 24;
     NLift_AoA = 12;
+    Speed_String = "15 m/s";
 else %Sets Index Values for Required AoA for 30 mps
+    Data = Data30;
     FullStall_AoA = 29;
     MaxLift_AoA = 28;
     NLift_AoA = 11;
+    Speed_String = "30 m/s";
 end
 %% Determine Forces & Analyze Results
 % Pressure Distribution for each Velocity & AoA tested (done by student code)
@@ -242,97 +250,104 @@ end
 % Velocity vs normalized chord (x/c)
 figure1 = figure("Name","Velocity");
 subplot(2,2,1) %First Velocity Plot for 0 Lift AoA
-VU = plot(Chord_NormalU(:),VelocityU(NLift_AoA,1:10));
-hold on;
-VL = plot(Chord_NormalL(:),VelocityL(NLift_AoA,1:9));
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Local Velocity (m/s)");
-title("Local Velocity vs Chord Length @ 0 Lift");
-legend([VU,VL], {"Upper","Lower"});
+    VU = plot(Chord_NormalU(:),VelocityU(NLift_AoA,1:10));
+    hold on;
+    grid on;
+    VL = plot(Chord_NormalL(:),VelocityL(NLift_AoA,1:9));
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Local Velocity (m/s)");
+    title("0 Lift");
+    legend([VU,VL], {"Upper Surface","Lower Surface"});
 
 subplot(2,2,2) %Second Velocity Plot for 6 AoA
-VU = plot(Chord_NormalU(:),VelocityU(21,1:10));
-hold on;
-VL = plot(Chord_NormalL(:),VelocityL(21,1:9));
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Local Velocity (m/s)");
-title("Local Velocity vs Chord Length  @ AoA 6");
-legend([VU,VL], {"Upper","Lower"});
+    VU = plot(Chord_NormalU(:),VelocityU(21,1:10));
+    hold on;
+    grid on;
+    VL = plot(Chord_NormalL(:),VelocityL(21,1:9));
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Local Velocity (m/s)");
+    title("AoA 6");
 
 subplot(2,2,3) %Third Velocity Plot for Fully Stall AoA
-VU = plot(Chord_NormalU(:),VelocityU(FullStall_AoA,1:10));
-hold on;
-VL = plot(Chord_NormalL(:),VelocityL(FullStall_AoA,1:9));
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Local Velocity (m/s)");
-title("Local Velocity vs Chord Length @ Fully Stall");
-legend([VU,VL], {"Upper","Lower"});
+    VU = plot(Chord_NormalU(:),VelocityU(FullStall_AoA,1:10));
+    hold on;
+    grid on;
+    VL = plot(Chord_NormalL(:),VelocityL(FullStall_AoA,1:9));
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Local Velocity (m/s)");
+    title("Fully Stall");
 
 subplot(2,2,4) %Fourth Velocity Plot for Max Lift AoA
-VU = plot(Chord_NormalU(:),VelocityU(MaxLift_AoA,1:10));
-hold on;
-VL = plot(Chord_NormalL(:),VelocityL(MaxLift_AoA,1:9));
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Local Velocity (m/s)");
-title("Local Velocity vs Chord Length @ Stall AoA");
-legend([VU,VL], {"Upper","Lower"});
+    VU = plot(Chord_NormalU(:),VelocityU(MaxLift_AoA,1:10));
+    hold on;
+    grid on;
+    VL = plot(Chord_NormalL(:),VelocityL(MaxLift_AoA,1:9));
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Local Velocity (m/s)");
+    title("Stall AoA");
+
+sgtitle("Local Velocity of " + Speed_String + " Airfoil at Varying Angle of Attacks "); %Overall Velocity Subplot Title
 
 % Coefficient of Pressure vs normalized chord (x/c)
 figure2 = figure("Name","C Pressure");
 subplot(2,2,1) %First Pressure Plot for 0 Lift AoA
-PU = plot(Chord_NormalU(:),C_pressureU(NLift_AoA,1:10),'-');
-hold on;
-PL = plot(Chord_NormalL(:),C_pressureL(NLift_AoA,1:9),'-');
-set(gca, 'YDir', 'reverse')
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Coefficient of Pressure");
-title("Coefficient of Pressure vs Chord Length @ 0 Lift");
-legend([PU,PL], {"Upper","Lower"});
+    PU = plot(Chord_NormalU(:),C_pressureU(NLift_AoA,1:10),'-');
+    hold on;
+    grid on;
+    PL = plot(Chord_NormalL(:),C_pressureL(NLift_AoA,1:9),'-');
+    set(gca, 'YDir', 'reverse')
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Coefficient of Pressure");
+    title("0 Lift");
+    legend([PU,PL], {"Upper Surface","Lower Surface"});
 
 subplot(2,2,2) %Second Pressure Plot for 6 AoA
-PU = plot(Chord_NormalU(:),C_pressureU(21,1:10),'-');
-hold on;
-PL = plot(Chord_NormalL(:),C_pressureL(21,1:9),'-');
-set(gca, 'YDir', 'reverse')
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Coefficient of Pressure");
-title("Coefficient of Pressure vs Chord Length @ AoA 6");
-legend([PU,PL], {"Upper","Lower"});
+    PU = plot(Chord_NormalU(:),C_pressureU(21,1:10),'-');
+    hold on;
+    grid on;
+    PL = plot(Chord_NormalL(:),C_pressureL(21,1:9),'-');
+    set(gca, 'YDir', 'reverse')
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Coefficient of Pressure");
+    title("AoA 6");
 
 subplot(2,2,3) %Third Pressure Plot for Fully Stall AoA
-PU = plot(Chord_NormalU(:),C_pressureU(FullStall_AoA,1:10),'-');
-hold on;
-PL = plot(Chord_NormalL(:),C_pressureL(FullStall_AoA,1:9),'-');
-set(gca, 'YDir', 'reverse')
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Coefficient of Pressure");
-title("Coefficient of Pressure vs Chord Length @ Fully Stall");
-legend([PU,PL], {"Upper","Lower"});
+    PU = plot(Chord_NormalU(:),C_pressureU(FullStall_AoA,1:10),'-');
+    hold on;
+    grid on;
+    PL = plot(Chord_NormalL(:),C_pressureL(FullStall_AoA,1:9),'-');
+    set(gca, 'YDir', 'reverse')
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Coefficient of Pressure");
+    title("Fully Stall");
 
 subplot(2,2,4) %Fourth Pressure Plot for Max Lift AoA
-PU = plot(Chord_NormalU(:),C_pressureU(MaxLift_AoA,1:10),'-');
-hold on;
-PL = plot(Chord_NormalL(:),C_pressureL(MaxLift_AoA,1:9),'-');
-set(gca, 'YDir', 'reverse')
-hold off;
-xlabel("Normalized Chord Length");
-ylabel("Coefficient of Pressure");
-title("Coefficient of Pressure vs Chord Length @ Stall AoA");
-legend([PU,PL], {"Upper","Lower"});
+    PU = plot(Chord_NormalU(:),C_pressureU(MaxLift_AoA,1:10),'-');
+    hold on;
+    grid on;
+    PL = plot(Chord_NormalL(:),C_pressureL(MaxLift_AoA,1:9),'-');
+    set(gca, 'YDir', 'reverse')
+    hold off;
+    xlabel("Normalized Chord Length");
+    ylabel("Coefficient of Pressure");
+    title("Stall AoA");
+
+sgtitle("Local Coefficient of Pressure of " + Speed_String + " Airfoil at Varying Angle of Attacks"); %Overall Subplot Title
 
 % Coefficient of Lift vs Angle of Attack
 figure3 = figure("name","C Lift");
 plot(Data(:,1),C_lift); %Plots CoL against AoA
+    grid on;
     xlabel("Angle of Attack"); %Set Labels for Graph
     ylabel("Coefficient of Lift");
-    title("Angle of Attack vs Coefficient of Lift");
+    title("Coefficient of Lift of " + Speed_String + " Airfoil Relative to Angle of Attack");
 
 
 
