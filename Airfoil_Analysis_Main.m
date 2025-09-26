@@ -23,7 +23,7 @@ addpath(genpath('15 mps Data Files')); %Adds 15 m/s test data files folder and s
 addpath(genpath('30 mps Data Files')); %Adds 30 m/s test data files folder and subfolders
 
 %% Velocity Choice
-Velocity_Choice = 30; %(15 or 30)
+Velocity_Choice = 15; %(15 or 30)
 
 %% Import Airfoil Port Locations
 Ports = readtable('Port_Locations.xlsx','Sheet','Port_Locations'); %Read in CSV file with port locations
@@ -181,9 +181,9 @@ for j = 1:numFiles %Iterates Through AoAs
             C_pressureU(j,i) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates Upper CoP
         elseif i == 10
             C_pressureU(j,i) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates TE CoP
-            C_pressureL(j,-i+19) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates TE CoP
+            C_pressureL(j,i-9) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates TE CoP
         else
-            C_pressureL(j,-i+19) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates Lower CoP
+            C_pressureL(j,i-9) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates Lower CoP
         end
     end
 end
@@ -237,9 +237,9 @@ for j = 1:numFiles %Iterates Through AoAs
             VelocityU(j,i) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates Upper Velocities
         elseif i == 10
             VelocityU(j,i) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates TE Velocity
-            VelocityL(j,-i+19) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates TE Velocity
+            VelocityL(j,i-9) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates TE Velocity
         else
-            VelocityL(j,-i+19) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates Lower Velocites
+            VelocityL(j,i-9) = sqrt(2*(Data(j,3)-Data(j,i+7))/Data(j,5)); %Calculates Lower Velocites
         end
     end
 end
