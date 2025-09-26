@@ -23,7 +23,7 @@ addpath(genpath('15 mps Data Files')); %Adds 15 m/s test data files folder and s
 addpath(genpath('30 mps Data Files')); %Adds 30 m/s test data files folder and subfolders
 
 %% Velocity Choice
-Velocity_Choice = 15; %(15 or 30)
+Velocity_Choice = 30; %(15 or 30)
 
 %% Import Airfoil Port Locations
 Ports = readtable('Port_Locations.xlsx','Sheet','Port_Locations'); %Read in CSV file with port locations
@@ -353,8 +353,8 @@ hold off;
     xlabel("Angle of Attack"); %Set Labels for Graph
     ylabel("Coefficient of Lift");
     title("Coefficient of Lift of " + Speed_String + " Airfoil and NACA Clark Y-14 Airfoil");
-    legend([EL,NL], {"15 m/s Airfoil","NACA Clark Y-14"});
-   
+    Legend_AF = Speed_String + " Airfoil";
+    legend([EL,NL], {Legend_AF,"NACA Clark Y-14"});
 
 
 
