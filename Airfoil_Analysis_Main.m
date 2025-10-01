@@ -29,6 +29,7 @@ Velocity_Choice = 30; %(15 or 30)
 Ports = readtable('Port_Locations.xlsx','Sheet','Port_Locations'); %Read in CSV file with port locations
 Segments = readtable('Port_Locations.xlsx','Sheet','Segments'); %Read in segment information from CSV file
 
+
 %% Search Data Folders, Pull File Names & Count Data Files
 % Get filenames for test data files
 fileLoc15 = '15 mps Data Files/';
@@ -165,60 +166,70 @@ else %Sets Index Values for Required AoA for 30 mps
     NLiftAoA = -4;
     Speed_String = "30 m/s";
 end
-%% Determine Forces & Analyze Results
-% Pressure Distribution for each Velocity & AoA tested (done by student code)
-PdisU = zeros(numFiles,9); %Creates Empty Array for Upper Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
-PdisL = zeros(numFiles,8); %Creates Empty Array for Lower Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
-for j = 1:numFiles %Iterates Through Each Angle of Attack
-    for i = 1:17 %Iterates Through Each Port
-        if i < 10 %Determines Upper or Lower
-            PdisU(j,i) = (Data(j,i+7)+Data(j,i+8))/2 * Segments{i,2}; %Calculates Upper Pressure Distribution Per Port
-        else
-            PdisL(j,-i+18) = (Data(j,i+7)+Data(j,i+8))/2 * Segments{i,2}; %Calculates Lower Pressure Distribtuion Per Port
-        end
-    end
-end
-%Coefficient of Pressure
-C_pressureU = zeros(numFiles,10); %Creates Empty Array for Coefficient of Upper Pressures
-C_pressureL = zeros(numFiles,9); %Creates Empty Array for Coefficient of Lower Pressures
-for j = 1:numFiles %Iterates Through AoAs
-    for i = 1:18
-        if i < 10
-            C_pressureU(j,i) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates Upper CoP
-        elseif i == 10
-            C_pressureU(j,i) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates TE CoP
-            C_pressureL(j,i-9) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates TE CoP
-        else
-            C_pressureL(j,i-9) = (Data(j,i+7)-Data(j,7))/Data(j,6); %Calculates Lower CoP
+
+function [PdisU, PdisL] = calculatePDist(dat, numFiles, Segments)
+    %% Determine Forces & Analyze Results
+    % Pressure Distribution for each Velocity & AoA tested (done by student code)
+    PdisU = zeros(numFiles,9); %Creates Empty Array for Upper Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
+    PdisL = zeros(numFiles,8); %Creates Empty Array for Lower Pressure Distribution Values, Rows = AOA, Columns = Port Splits (N/m)
+    for j = 1:numFiles %Iterates Through Each Angle of Attack
+        for i = 1:17 %Iterates Through Each Port
+            if i < 10 %Determines Upper or Lower
+                PdisU(j,i) = (dat(j,i+7)+dat(j,i+8))/2 * Segments{i,2}; %Calculates Upper Pressure Distribution Per Port
+            else
+                PdisL(j,-i+18) = (dat(j,i+7)+dat(j,i+8))/2 * Segments{i,2}; %Calculates Lower Pressure Distribtuion Per Port
+            end
         end
     end
 end
 
-% Normal and Axial Force components for each Velocity & AoA tested (done by student code)
-N_upper = zeros(numFiles,1); %Creates Empty Array for Upper Normal Force
-N_lower = zeros(numFiles,1); %Creates Empty Array for Lower Normal Force
-A_upper = zeros(numFiles,1); %Creates Empty Array for Upper Axial Force
-A_lower = zeros(numFiles,1); %Creates Empty Array for Lower Axial Force
-for j = 1:numFiles %Iterates Through Each Angle of Attack
-    for i = 1:17 %Iterates Through Each Port Section
-        if i<10 %Determines Upper or Lower
-            N_upper(j) = N_upper(j) - PdisU(j,i); %Subtracts Segmented Normal Upper Force From Total
-            A_upper(j) = A_upper(j) + (Data(j,i+7)+Data(j,i+8))/2 * Segments {i,3}; %Calculates and Adds Segmented Axial Upper Force to Total
-        else
-            N_lower(j) = N_lower(j) + PdisL(j,i-9); %Adds Segmented Normal Lower Force to Total
-            A_lower(j) = A_lower(j) - (Data(j,i+7)+Data(j,i+8))/2 * Segments {i,3}; %Calculates and Subtractes Segmented Axial Lower Force From Total
+function [C_pressureU, C_pressureL] = calculatePressureCoefficients(dat, numFiles)
+    C_pressureU = zeros(numFiles,10); %Creates Empty Array for Coefficient of Upper Pressures
+    C_pressureL = zeros(numFiles,9); %Creates Empty Array for Coefficient of Lower Pressures
+    for j = 1:numFiles %Iterates Through AoAs
+        for i = 1:18
+            if i < 10
+                C_pressureU(j,i) = (dat(j,i+7)-dat(j,7))/dat(j,6); %Calculates Upper CoP
+            elseif i == 10
+                C_pressureU(j,i) = (dat(j,i+7)-dat(j,7))/dat(j,6); %Calculates TE CoP
+                C_pressureL(j,i-9) = (dat(j,i+7)-dat(j,7))/dat(j,6); %Calculates TE CoP
+            else
+                C_pressureL(j,i-9) = (dat(j,i+7)-dat(j,7))/dat(j,6); %Calculates Lower CoP
+            end
         end
     end
 end
-N_total = N_upper + N_lower; %Calculates Total Normal Force
-A_total = A_upper + A_lower; %Calculates Total Axial Force
 
-% Lift & Coefficient of Lift for each Velocity & AoA tested (done by student code)
-Chord_length = Ports{10,2}; %Sets Chord Length Equal to X Value of Trailing Edge Port
-for j = 1:numFiles %Iterates Through Each AoA
-    Lift = N_total * cosd(Data(j,1)) - A_total * sind(Data(j,2)); %Calculates Lift and Puts into new Array
-    C_lift = Lift/(Data(j,6) * Chord_length); %Calculates Coeficient of Lift
+function C_lift = calculateClForData(dat, numFiles, Segments, Ports)
+    [PdisU, PdisL] = calculatePDist(dat, numFiles, Segments);
+    
+    % Normal and Axial Force components for each Velocity & AoA tested (done by student code)
+    N_upper = zeros(numFiles,1); %Creates Empty Array for Upper Normal Force
+    N_lower = zeros(numFiles,1); %Creates Empty Array for Lower Normal Force
+    A_upper = zeros(numFiles,1); %Creates Empty Array for Upper Axial Force
+    A_lower = zeros(numFiles,1); %Creates Empty Array for Lower Axial Force
+    for j = 1:numFiles %Iterates Through Each Angle of Attack
+        for i = 1:17 %Iterates Through Each Port Section
+            if i<10 %Determines Upper or Lower
+                N_upper(j) = N_upper(j) - PdisU(j,i); %Subtracts Segmented Normal Upper Force From Total
+                A_upper(j) = A_upper(j) + (dat(j,i+7)+dat(j,i+8))/2 * Segments {i,3}; %Calculates and Adds Segmented Axial Upper Force to Total
+            else
+                N_lower(j) = N_lower(j) + PdisL(j,i-9); %Adds Segmented Normal Lower Force to Total
+                A_lower(j) = A_lower(j) - (dat(j,i+7)+dat(j,i+8))/2 * Segments {i,3}; %Calculates and Subtractes Segmented Axial Lower Force From Total
+            end
+        end
+    end
+    N_total = N_upper + N_lower; %Calculates Total Normal Force
+    A_total = A_upper + A_lower; %Calculates Total Axial Force
+    
+    % Lift & Coefficient of Lift for each Velocity & AoA tested (done by student code)
+    Chord_length = Ports{10,2}; %Sets Chord Length Equal to X Value of Trailing Edge Port
+    for j = 1:numFiles %Iterates Through Each AoA
+        Lift = N_total * cosd(dat(j,1)) - A_total * sind(dat(j,2)); %Calculates Lift and Puts into new Array
+        C_lift = Lift/(dat(j,6) * Chord_length); %Calculates Coeficient of Lift
+    end
 end
+
 
 %Normalized Chord
 Chord_NormalU = zeros(1,9); %Creates Empty Array for Upper Normalized Chord Lengths (% of Chord)
@@ -250,9 +261,15 @@ for j = 1:numFiles %Iterates Through AoAs
     end
 end
 
+% Coefficient of pressure calculations
+[C_pressureU, C_pressureL] = calculatePressureCoefficients(Data, numFiles);
+
 %% Clark NACA Overlay Collection
 NACA = readtable("ClarkY14_NACA_TR628.xlsx");
 NACA = table2array(NACA);
+
+%% Get 30 m/s data, global vars are set when this function is called
+C_lift30 = calculateClForData(Data30, numFiles, Segments, Ports);
 
 %% Plots
 % Velocity vs normalized chord (x/c)
@@ -349,26 +366,18 @@ subplot(2,2,4) %Fourth Pressure Plot for Max Lift AoA
 
 sgtitle("Local Coefficient of Pressure of " + Speed_String + " Airfoil at Varying Angle of Attacks"); %Overall Subplot Title
 
+%% Get 15 m/s coeff. of lift. This is down here because the global variables for C_pressure will be overwritten with 15 m/s data
+C_lift15 = calculateClForData(Data15, numFiles, Segments, Ports)
+
 % Coefficient of Lift vs Angle of Attack
 figure3 = figure("name","C Lift");
-EL = plot(Data(:,1),C_lift); %Plots CoL against AoA
+CL30_Graph = plot(Data30(:,1),C_lift30); %Plots CoL against AoA
 hold on;
-NL = plot(NACA(:,1),NACA(:,2));
+CL15_Graph = plot(Data15(:,1),C_lift15); % Plot 15 m/s cl
+NACA_Graph = plot(NACA(:,1),NACA(:,2));
 hold off;
     grid on;
     xlabel("Angle of Attack"); %Set Labels for Graph
     ylabel("Coefficient of Lift");
     title("Coefficient of Lift of " + Speed_String + " Airfoil and NACA Clark Y-14 Airfoil");
-    Legend_AF = Speed_String + " Airfoil";
-    legend([EL,NL], {Legend_AF,"NACA Clark Y-14"});
-
-
-
-
-
-
-
-
-
-
-
+    legend([CL30_Graph,CL15_Graph,NACA_Graph], {"30 m/s Airfoil","15 m/s Airfoil","NACA Clark Y-14"});
