@@ -200,8 +200,12 @@ function [C_pressureU, C_pressureL] = calculatePressureCoefficients(dat, numFile
     end
 end
 
-function C_lift = calculateClForData(dat, numFiles, Segments, Ports)
+
+
+function [C_lift, NTot, ATot] = calculateClForData(dat, numFiles, Segments, Ports)
     [PdisU, PdisL] = calculatePDist(dat, numFiles, Segments);
+
+  
     
     % Normal and Axial Force components for each Velocity & AoA tested (done by student code)
     N_upper = zeros(numFiles,1); %Creates Empty Array for Upper Normal Force
@@ -228,6 +232,10 @@ function C_lift = calculateClForData(dat, numFiles, Segments, Ports)
         Lift = N_total * cosd(dat(j,1)) - A_total * sind(dat(j,2)); %Calculates Lift and Puts into new Array
         C_lift = Lift/(dat(j,6) * Chord_length); %Calculates Coeficient of Lift
     end
+
+    NTot = N_total;
+    ATot = A_total;
+   
 end
 
 
@@ -269,7 +277,7 @@ NACA = readtable("ClarkY14_NACA_TR628.xlsx");
 NACA = table2array(NACA);
 
 %% Get 30 m/s data, global vars are set when this function is called
-C_lift30 = calculateClForData(Data30, numFiles, Segments, Ports);
+[C_lift30, N_Total, A_Total] = calculateClForData(Data30, numFiles, Segments, Ports);
 
 %% Plots
 % Velocity vs normalized chord (x/c)
@@ -381,3 +389,14 @@ hold off;
     ylabel("Coefficient of Lift");
     title("Coefficient of Lift of " + Speed_String + " Airfoil and NACA Clark Y-14 Airfoil");
     legend([CL30_Graph,CL15_Graph,NACA_Graph], {"30 m/s Airfoil","15 m/s Airfoil","NACA Clark Y-14"});
+
+
+    figure("Name", "N and A");%graph for normal and axial forces
+    plot(Data30(:,1),A_Total,"r-");
+    hold on;
+    plot(Data30(:,1),N_Total,"b-");
+    grid on;
+    xlabel("Angle of Attack");
+    ylabel("Force N");
+    title("Relationship between AoA and total force");
+    legend("Axial force", "Normal force");
